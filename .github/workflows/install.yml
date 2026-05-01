@@ -6,6 +6,11 @@ on:
       - "**"
     paths:
       - ".github/workflows/install.yml"
+      - "src/**"
+      - "src-tauri/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "vite.config.ts"
       - "assets/**"
       - "**.py"
   pull_request:
@@ -13,13 +18,17 @@ on:
       - "**"
     paths:
       - ".github/workflows/install.yml"
+      - "src/**"
+      - "src-tauri/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "vite.config.ts"
       - "assets/**"
       - "**.py"
   workflow_dispatch:
 
 env:
   MAA_FRAMEWORK_VERSION: "v5.10.2"
-  MFAA_VERSION: "v2.12.0"
 
 permissions:
   contents: write
@@ -34,14 +43,12 @@ jobs:
           fetch-depth: 0
       - id: set_tag
         run: |
-          # 检查标签格式
           if [[ ${{ github.ref }} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)?$ ]]; then
             is_release=true
             tag=${GITHUB_REF#refs/tags/}
             echo "Release tag format is valid: $tag"
           else
             is_release=false
-            # 获取最新的发布标签
             tag=$(curl -sX GET "https://api.github.com/repos/${{ github.repository }}/releases/latest" --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' | awk '/tag_name/{print $4}' FS='["]')
             if [[ ! $tag =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
               echo "No valid release tag found, using v0.0.1"
@@ -56,11 +63,9 @@ jobs:
             tag="$prefix-ci.$suffix"
           fi
 
-          # 检查是否为预发布版本
           is_prerelease=false
           if [[ $tag =~ .*alpha.* || $tag =~ .*beta.* || $tag =~ .*rc.* || $tag =~ .*dev.* || $tag =~ .*-ci.* || $tag =~ .*preview.* ]]; then
             is_prerelease=true
-            echo "This is a pre-release version"
           fi
 
           echo tag=$tag | tee -a $GITHUB_OUTPUT
@@ -75,16 +80,66 @@ jobs:
     needs: meta
     strategy:
       matrix:
-        include:
-          - arch: x86_64
-            runner: windows-latest
+        arch: [x86_64, aarch64]
       fail-fast: false
-    runs-on: ${{ matrix.runner }}
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.arch == 'x86_64' && 'x86_64-pc-windows-msvc' || 'aarch64-pc-windows-msvc' }}
+
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@v0.0.9
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "src-tauri -> target"
+          shared-key: "windows-${{ matrix.arch }}"
+          cache-on-failure: true
+
+      - name: Install frontend dependencies
+        run: pnpm install
+
+      - name: Update version
+        shell: bash
+        run: |
+          VERSION="${{ needs.meta.outputs.tag }}"
+          VERSION_NUM="${VERSION#v}"
+          sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION_NUM\"/" package.json
+          sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION_NUM\"/" src-tauri/tauri.conf.json
+          sed -i "s/^version = \"[^\"]*\"/version = \"$VERSION_NUM\"/" src-tauri/Cargo.toml
+          echo "Updated version to $VERSION_NUM"
+
+      - name: Convert PNG to ICO
+        if: matrix.arch == 'x86_64'
+        shell: bash
+        run: |
+          choco install imagemagick -y
+          mkdir -p src-tauri/icons
+          magick convert assets/logo.png -define icon:auto-resize=256,128,64,48,32,24,16 src-tauri/icons/icon.ico
+
+      - name: Build Tauri app
+        env:
+          CARGO_INCREMENTAL: 0
+          RUSTC_WRAPPER: sccache
+          SCCACHE_GHA_ENABLED: "true"
+        run: pnpm tauri build --bundles nsis --target ${{ matrix.arch == 'x86_64' && 'x86_64-pc-windows-msvc' || 'aarch64-pc-windows-msvc' }}
 
       - name: Set platform variables
         id: platform
@@ -105,48 +160,6 @@ jobs:
           out-file-path: "deps"
           extract: true
 
-      - name: Download MFAAvalonia
-        id: download_mfa
-        uses: robinraju/release-downloader@v1
-        with:
-          repository: MaaXYZ/MFAAvalonia
-          fileName: "MFAAvalonia-*-win-${{ steps.platform.outputs.tag }}*"
-          tag: ${{ env.MFAA_VERSION }}
-          out-file-path: "MFA"
-          extract: true
-
-      - name: Clean up MFAAvalonia archive on Windows
-        shell: bash
-        run: |
-          ARCHIVE_FILE_PATH="${{ fromJson(steps.download_mfa.outputs.downloaded_files)[0] }}"
-          rm -f "${ARCHIVE_FILE_PATH}"
-          echo "Archive cleanup command executed for MFAAvalonia on Windows."
-
-      - name: Convert PNG to ICO
-        if: matrix.arch == 'x86_64'
-        shell: bash
-        run: |
-          # 安装 ImageMagick
-          choco install imagemagick -y
-
-          # 转换 PNG 到 ICO
-          magick convert assets/logo.png -define icon:auto-resize=256,128,64,48,32,24,16 maante.ico
-
-      - name: Modify Windows exe icons
-        if: matrix.arch == 'x86_64'
-        shell: bash
-        run: |
-          # 下载 rcedit
-          curl -L https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-x64.exe -o rcedit.exe
-
-          # 修改 MFAAvalonia 图标（如果存在）
-          if [ -f "MFA/MFAAvalonia.exe" ]; then
-            ./rcedit.exe "MFA/MFAAvalonia.exe" --set-icon "maante.ico"
-            echo "MFAAvalonia icon modified successfully"
-          else
-            echo "MFAAvalonia exe not found, skipping icon update."
-          fi
-
       - name: Setup Embed Python on Windows
         shell: bash
         run: |
@@ -157,46 +170,23 @@ jobs:
         run: |
           ./install/python/python.exe tools/ci/download_deps.py --deps-dir install/deps
 
-      - name: Install
+      - name: Copy Tauri build output
+        shell: bash
+        run: |
+          TARGET_DIR="src-tauri/target/${{ matrix.arch == 'x86_64' && 'x86_64-pc-windows-msvc' || 'aarch64-pc-windows-msvc' }}/release"
+          cp -r "$TARGET_DIR/bundle/nsis/"*.exe install/ || true
+          cp -r "$TARGET_DIR/bundle/resources/"* install/ || true
+          echo "Copied Tauri build output to install/"
+
+      - name: Install Python agent
         shell: bash
         run: |
           PLATFORM_TAG="win-${{ steps.platform.outputs.tag }}"
           ./install/python/python.exe ./tools/ci/install.py ${{ needs.meta.outputs.tag }} $PLATFORM_TAG
 
-      - name: Copy MFA files to main version
-        shell: bash
-        run: |
-          if [ -d "MFA" ]; then
-            echo "Copying MFA files to install directory..."
-            mkdir -p install
-            cp -rpvn MFA/. install/
-            if [ -f "install/MFAAvalonia.exe" ]; then
-              mv -f install/MFAAvalonia.exe install/MaaNTE.exe
-            elif [ -f "install/MFAAvalonia" ]; then
-              mv -f install/MFAAvalonia install/MaaNTE
-            fi
-          else
-            echo "MFA directory not found, skipping copy."
-          fi
-
-      - name: Copy custom icons
-        shell: bash
-        run: |
-          # 删除 MFAA 自带的 Assets 文件夹
-          if [ -d "install/Assets" ]; then
-            rm -rf install/Assets
-            echo "Removed original Assets folder"
-          fi
-
-          # MFAA 版本的图标放根目录
-          if [ -f "maante.ico" ]; then
-            cp maante.ico install/logo.ico
-            echo "Copied custom icon to install/logo.ico"
-          fi
-
       - uses: actions/upload-artifact@v4
         with:
-          name: MaaNTE-win-${{ matrix.arch }}-${{ needs.meta.outputs.tag }}-MFAA
+          name: MaaNTE-win-${{ matrix.arch }}-${{ needs.meta.outputs.tag }}
           path: "install"
 
   changelog:
@@ -216,8 +206,6 @@ jobs:
         id: git-cliff
         with:
           config: .github/cliff.toml
-          # 正式版：使用 tag-pattern 只匹配正式版标签，包含所有从上一个正式版以来的提交
-          # 预发布版：正常生成，只包含从上一个标签以来的提交
           args: >-
             -vv --latest --strip header
             ${{ needs.meta.outputs.is_prerelease == 'false' && '--tag-pattern "^v[0-9]+\\.[0-9]+\\.[0-9]+$"' || '' }}
@@ -241,24 +229,6 @@ jobs:
             if [[ $f == *"win"* ]]; then
               (cd "$f" && zip -r "../$f.zip" .)
             else
-              echo "Processing Unix artifact: $f"
-
-              if [[ -f "$f/MaaPiCli" ]]; then
-                chmod +x "$f/MaaPiCli"
-                echo "Set execute permission for $f/MaaPiCli"
-              fi
-
-              find "$f" -type f -name "MFAAvalonia*" -exec chmod +x {} \; 2>/dev/null || true
-              echo "Set execute permission for all MFAAvalonia files"
-
-              find "$f" -type f -name "MFAUpdater*" -exec chmod +x {} \; 2>/dev/null || true
-              echo "Set execute permission for all MFAUpdater files"
-
-              if [[ -f "$f/MaaNTE" ]]; then
-                chmod +x "$f/MaaNTE"
-                echo "Set execute permission for $f/MaaNTE"
-              fi
-
               PYTHON_PATHS=(
                 "$f/python/bin/python3"
                 "$f/python/python"
@@ -268,12 +238,9 @@ jobs:
               for PYTHON_PATH in "${PYTHON_PATHS[@]}"; do
                 if [[ -f "$PYTHON_PATH" ]]; then
                   chmod +x "$PYTHON_PATH"
-                  echo "Set execute permission for $PYTHON_PATH"
                 fi
               done
-
               tar -cpzf "$f.tar.gz" -C "$f" .
-              echo "Created archive with preserved permissions: $f.tar.gz"
             fi
           done
 
