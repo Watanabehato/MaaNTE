@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
-"""MaaNTE 启动器 - 独立编译版"""
+"""MaaNTE 启动器 - 独立编译版
+
+功能：
+1. 首次使用弹出警告窗口
+2. 校验 interface.json welcome 字段完整性
+"""
 
 import ctypes
+import hashlib
 import json
 import os
 import subprocess
@@ -21,11 +27,21 @@ WARN_TEXT = (
     "开发者团队拥有本项目的最终解释权。"
 )
 
+_EXPECTED_WELCOME_HASH = "7b4e40b09fb2eb391beb9943cf491129934abe04cb43eaae5b6965be464773ea"
 
-def main():
-    work_dir = Path(sys.executable).resolve().parent if getattr(sys, 'frozen', False) else Path(__file__).resolve().parent
-    os.chdir(work_dir)
+MB_OK = 0x0
+MB_ICONWARNING = 0x30
+MB_ICONERROR = 0x10
+MB_TOPMOST = 0x40000
+MB_SETFOREGROUND = 0x10000
+MB_SYSTEMMODAL = 0x1000
 
+
+def _msgbox(text, title, flags):
+    ctypes.windll.user32.MessageBoxW(None, text, title, flags)
+
+
+def check_first_use(work_dir):
     config_path = work_dir / "config" / "warning_shown.json"
     shown = False
     if config_path.exists():
@@ -36,22 +52,11 @@ def main():
             pass
 
     if not shown:
-        MB_OK = 0x0
-        MB_TOPMOST = 0x40000
-        MB_ICONWARNING = 0x30
-        MB_SETFOREGROUND = 0x10000
-
-        try:
-            hwnd = ctypes.windll.user32.GetForegroundWindow()
-            pMsgBox = ctypes.windll.user32.MessageBoxTimeoutW
-            pMsgBox(hwnd, WARN_TEXT, "MaaNTE - 首次使用须知",
-                    MB_OK | MB_TOPMOST | MB_ICONWARNING | MB_SETFOREGROUND,
-                    0, 5000)
-        except Exception:
-            ctypes.windll.user32.MessageBoxW(
-                None, WARN_TEXT, "MaaNTE - 首次使用须知",
-                MB_OK | MB_TOPMOST | MB_ICONWARNING)
-
+        _msgbox(
+            WARN_TEXT,
+            "MaaNTE - 首次使用须知",
+            MB_OK | MB_ICONWARNING | MB_TOPMOST | MB_SETFOREGROUND | MB_SYSTEMMODAL,
+        )
         try:
             config_path.parent.mkdir(exist_ok=True)
             with open(config_path, "w", encoding="utf-8") as f:
@@ -59,13 +64,52 @@ def main():
         except Exception:
             pass
 
+
+def check_integrity(work_dir):
+    interface_path = work_dir / "interface.json"
+    if not interface_path.exists():
+        return
+
+    try:
+        with open(interface_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        welcome = data.get("welcome", "")
+        if not welcome:
+            raise ValueError("welcome 字段为空或已被移除")
+        actual = hashlib.sha256(welcome.encode("utf-8")).hexdigest()
+        if actual != _EXPECTED_WELCOME_HASH:
+            raise ValueError(f"哈希不匹配 (期望 {_EXPECTED_WELCOME_HASH[:16]}..., 实际 {actual[:16]}...)")
+    except Exception as e:
+        _msgbox(
+            f"警告内容完整性校验失败！\n\n"
+            f"本软件为免费开源项目，从未授权任何人售卖。\n"
+            f"如在第三方平台购买了本软件，请立即申请退款并举报。\n\n"
+            f"校验详情: {e}",
+            "MaaNTE - 完整性校验失败",
+            MB_OK | MB_ICONERROR | MB_TOPMOST | MB_SETFOREGROUND | MB_SYSTEMMODAL,
+        )
+
+
+def main():
+    work_dir = (
+        Path(sys.executable).resolve().parent
+        if getattr(sys, "frozen", False)
+        else Path(__file__).resolve().parent
+    )
+    os.chdir(work_dir)
+
+    check_first_use(work_dir)
+    check_integrity(work_dir)
+
     core = work_dir / "MaaNTE_core.exe"
     if core.exists():
         subprocess.Popen([str(core)], cwd=str(work_dir))
     else:
-        ctypes.windll.user32.MessageBoxW(
-            None, "找不到 MaaNTE_core.exe，请检查安装是否完整。",
-            "MaaNTE", 0x10)
+        _msgbox(
+            "找不到 MaaNTE_core.exe，请检查安装是否完整。",
+            "MaaNTE",
+            MB_OK | MB_ICONERROR,
+        )
 
 
 if __name__ == "__main__":
