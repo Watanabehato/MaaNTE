@@ -228,6 +228,20 @@ def _verify_warning_integrity():
         logger.error(f"⚠ 校验详情: {e}")
         logger.error("⚠ 如在第三方平台购买了本软件，请立即申请退款并举报。")
         logger.error("=" * 60)
+        if sys.platform.startswith("win"):
+            try:
+                import ctypes
+                ctypes.windll.user32.MessageBoxW(
+                    None,
+                    "警告内容完整性校验失败！\n\n"
+                    "本软件为免费开源项目，从未授权任何人售卖。\n"
+                    "如在第三方平台购买了本软件，请立即申请退款并举报。\n\n"
+                    f"校验详情: {e}",
+                    "MaaNTE - 完整性校验失败",
+                    0x00000010 | 0x00040000,
+                )
+            except Exception:
+                pass
 
 
 def _show_first_use_warning():
