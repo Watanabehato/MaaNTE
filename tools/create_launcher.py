@@ -10,6 +10,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.stdout.reconfigure(encoding="utf-8")
+sys.stderr.reconfigure(encoding="utf-8")
+
 script_dir = Path(__file__).parent
 install_path = script_dir.parent.parent / "install"
 
