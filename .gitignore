@@ -20,6 +20,7 @@ build-*
 *.so
 *.dylib
 *.dll
+!maafw/**
 
 # Fortran module files
 *.mod
@@ -36,6 +37,7 @@ build-*
 *.exe
 *.out
 *.app
+!maante.exe
 
 Debug
 Release
@@ -73,9 +75,11 @@ x86/
 [Aa][Rr][Mm]64/
 bld/
 [Bb]in/
+!maafw/**
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+!cache/**
 cmake-build-debug/
 
 # Visual Studio 2015/2017 cache/options directory
