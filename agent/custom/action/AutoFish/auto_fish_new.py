@@ -22,11 +22,17 @@ class AutoFishNew(CustomAction):
     success_catch_img = image_dir / "success_catch.png"
 
     slider_template = cv2.imread(str(slider_img), cv2.IMREAD_COLOR)
-    valid_region_left_template = cv2.imread(str(valid_region_left_img), cv2.IMREAD_COLOR)
-    valid_region_right_template = cv2.imread(str(valid_region_right_img), cv2.IMREAD_COLOR)
+    valid_region_left_template = cv2.imread(
+        str(valid_region_left_img), cv2.IMREAD_COLOR
+    )
+    valid_region_right_template = cv2.imread(
+        str(valid_region_right_img), cv2.IMREAD_COLOR
+    )
     success_catch_template = cv2.imread(str(success_catch_img), cv2.IMREAD_COLOR)
 
-    def run(self, context: Context, _argv: CustomAction.RunArg) -> CustomAction.RunResult:
+    def run(
+        self, context: Context, _argv: CustomAction.RunArg
+    ) -> CustomAction.RunResult:
         print("=== Autofish Action Started ===")
         controller = context.tasker.controller
 
@@ -34,7 +40,7 @@ class AutoFishNew(CustomAction):
         KEY_D = 68
         KEY_F = 70
 
-        success_region = (350,150,830,200)
+        success_region = (350, 150, 830, 200)
         game_region = (395, 40, 880, 60)
         deadzone = 15
 
@@ -48,7 +54,9 @@ class AutoFishNew(CustomAction):
             time.sleep(0.001)
             img = get_image(controller)
             wait_frame += 1
-            m_catch, catch_score, _, _ = match_template_in_region(img, success_region, self.success_catch_template, 0.7)
+            m_catch, catch_score, _, _ = match_template_in_region(
+                img, success_region, self.success_catch_template, 0.7
+            )
             if wait_frame > 300:
                 print(f"  [wait] timeout (f={wait_frame}), fish ended")
                 break
@@ -87,9 +95,15 @@ class AutoFishNew(CustomAction):
             img = get_image(controller)
             frame += 1
 
-            m_left, left_score, x_left, _ = match_template_in_region(img, game_region, self.valid_region_left_template, 0.7)
-            m_right, right_score, x_right, _ = match_template_in_region(img, game_region, self.valid_region_right_template, 0.7)
-            m_slider, slider_score, x_slider, _ = match_template_in_region(img, game_region, self.slider_template, 0.9)
+            m_left, left_score, x_left, _ = match_template_in_region(
+                img, game_region, self.valid_region_left_template, 0.7
+            )
+            m_right, right_score, x_right, _ = match_template_in_region(
+                img, game_region, self.valid_region_right_template, 0.7
+            )
+            m_slider, slider_score, x_slider, _ = match_template_in_region(
+                img, game_region, self.slider_template, 0.9
+            )
 
             if frame % 10 == 0:
                 if current_ad_key is not None:
@@ -108,8 +122,10 @@ class AutoFishNew(CustomAction):
                 if slider_miss_count >= 30:
                     set_ad_key(None)
                     controller.post_key_up(KEY_F)
-                    print(f"  [minigame] slider lost {slider_miss_count} frames, minigame ended.")
-                    break
+                    print(
+                        f"  [minigame] slider lost {slider_miss_count} frames, minigame ended."
+                    )
+                    return CustomAction.RunResult(success=True)
                 x_slider = last_x_slider
 
             if frame > 300:
@@ -118,7 +134,7 @@ class AutoFishNew(CustomAction):
                 controller.post_key_up(KEY_D)
                 controller.post_key_up(KEY_F)
                 print(f"  [minigame] timeout (f={frame}), minigame ended.")
-                break
+                return CustomAction.RunResult(success=False)
 
             if m_left and m_right:
                 last_bar_width = x_right - x_left
@@ -144,9 +160,8 @@ class AutoFishNew(CustomAction):
 
             if frame % 30 == 0 or current_ad_key != prev_key:
                 key_name = {None: "-", KEY_A: "A", KEY_D: "D"}.get(current_ad_key, "?")
-                print(f"  [minigame] f={frame} slider(x={x_slider:.0f} s={slider_score:.2f}) "
-                      f"L({m_left} s={left_score:.2f}) R({m_right} s={right_score:.2f}) "
-                      f"bar_w={last_bar_width:.0f} target={target:.0f} offset={offset:+.0f} key={key_name}")
-
-        print("  Fishing done.")
-        return CustomAction.RunResult(success=True)
+                print(
+                    f"  [minigame] f={frame} slider(x={x_slider:.0f} s={slider_score:.2f}) "
+                    f"L({m_left} s={left_score:.2f}) R({m_right} s={right_score:.2f}) "
+                    f"bar_w={last_bar_width:.0f} target={target:.0f} offset={offset:+.0f} key={key_name}"
+                )
