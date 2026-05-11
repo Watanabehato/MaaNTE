@@ -20,21 +20,6 @@ if os.getcwd() != project_root_dir:
 print(f"set cwd: {os.getcwd()}")
 
 
-def cleanup_debug_log_files():
-    """每次启动时清理 debug 目录下的日志文件。"""
-    debug_dir = Path(project_root_dir) / "debug"
-
-    if not debug_dir.exists() or not debug_dir.is_dir():
-        return
-
-    for log_file in debug_dir.glob("**/*.log"):
-        try:
-            if log_file.is_file() and not log_file.is_symlink():
-                log_file.unlink()
-        except OSError as e:
-            continue
-
-
 # 将脚本自身的目录添加到sys.path，以便导入utils、maa等模块
 if current_script_dir not in sys.path:
     sys.path.insert(0, current_script_dir)
@@ -539,7 +524,6 @@ def main():
         ensure_venv_and_relaunch_if_needed()
 
     check_and_install_dependencies()
-    cleanup_debug_log_files()
 
     if is_dev_mode:
         os.chdir(Path("./assets"))
