@@ -3,11 +3,9 @@
 
 功能：
 1. 首次使用弹出警告窗口
-2. 校验 interface.json welcome 字段完整性
 """
 
 import ctypes
-import hashlib
 import json
 import os
 import subprocess
@@ -26,8 +24,6 @@ WARN_TEXT = (
     "使用本软件产生的所有后果由使用者自行承担，与开发者团队无关。\r\n"
     "开发者团队拥有本项目的最终解释权。"
 )
-
-_EXPECTED_WELCOME_HASH = "7b4e40b09fb2eb391beb9943cf491129934abe04cb43eaae5b6965be464773ea"
 
 MB_OK = 0x0
 MB_ICONWARNING = 0x30
@@ -65,31 +61,6 @@ def check_first_use(work_dir):
             pass
 
 
-def check_integrity(work_dir):
-    interface_path = work_dir / "interface.json"
-    if not interface_path.exists():
-        return
-
-    try:
-        with open(interface_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        welcome = data.get("welcome", "")
-        if not welcome:
-            raise ValueError("welcome 字段为空或已被移除")
-        actual = hashlib.sha256(welcome.encode("utf-8")).hexdigest()
-        if actual != _EXPECTED_WELCOME_HASH:
-            raise ValueError(f"哈希不匹配 (期望 {_EXPECTED_WELCOME_HASH[:16]}..., 实际 {actual[:16]}...)")
-    except Exception as e:
-        _msgbox(
-            f"警告内容完整性校验失败！\n\n"
-            f"本软件为免费开源项目，从未授权任何人售卖。\n"
-            f"如在第三方平台购买了本软件，请立即申请退款并举报。\n\n"
-            f"校验详情: {e}",
-            "MaaNTE - 完整性校验失败",
-            MB_OK | MB_ICONERROR | MB_TOPMOST | MB_SETFOREGROUND | MB_SYSTEMMODAL,
-        )
-
-
 def main():
     work_dir = (
         Path(sys.executable).resolve().parent
@@ -99,7 +70,8 @@ def main():
     os.chdir(work_dir)
 
     check_first_use(work_dir)
-    check_integrity(work_dir)
+
+    core
 
     core = work_dir / "MaaNTE_core.exe"
     if core.exists():

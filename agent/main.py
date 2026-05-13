@@ -3,7 +3,6 @@
 import os
 import sys
 import json
-import hashlib
 import ctypes
 import subprocess
 from pathlib import Path
@@ -219,90 +218,6 @@ def _show_messagebox_blocking(title: str, message: str):
         logger.error(f"  ⚠ {message}")
 
 
-def _verify_warning_integrity():
-    """校验 assets/interface.json 中 welcome 字段的完整性，防止第三方篡改。
-    校验通过时弹出正常公告，校验失败时弹出篡改警告并阻止启动。"""
-    interface_path = Path(project_root_dir) / "assets" / "interface.json"
-    hash_path = Path(project_root_dir) / "assets" / ".welcome.hash"
-
-    # 缺少 interface.json 时不弹公告
-    if not interface_path.exists():
-        return
-
-    try:
-        with open(interface_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        welcome_text = data.get("welcome", "")
-        if not welcome_text:
-            return
-        actual_hash = hashlib.sha256(welcome_text.encode("utf-8")).hexdigest()
-    except json.JSONDecodeError as e:
-        title = "⚠ 完整性校验异常"
-        message = (
-            f"无法解析 interface.json：{e}\n\n"
-            "⚠ 本软件为免费开源项目，从未授权任何人售卖。\n"
-            "⚠ 如在第三方平台购买了本软件，请凭此截图退款举报。\n\n"
-            "已阻止启动以保护您的安全。"
-        )
-        _show_messagebox_blocking(title, message)
-        sys.exit(1)
-    except Exception as e:
-        title = "⚠ 完整性校验异常"
-        message = (
-            f"读取 interface.json 失败：{e}\n\n"
-            "⚠ 本软件为免费开源项目，从未授权任何人售卖。\n"
-            "⚠ 如在第三方平台购买了本软件，请凭此截图退款举报。\n\n"
-            "已阻止启动以保护您的安全。"
-        )
-        _show_messagebox_blocking(title, message)
-        sys.exit(1)
-
-    # 有 interface.json 但无 .welcome.hash → 缺少完整性校验依据，阻止启动
-    if not hash_path.exists():
-        title = "⚠ 完整性校验异常"
-        message = (
-            "检测到 interface.json 文件但缺少对应的完整性校验文件 (.welcome.hash)。\n\n"
-            "⚠ 本软件为免费开源项目，从未授权任何人售卖。\n"
-            "⚠ 如在第三方平台购买了本软件，请凭此截图退款举报。\n\n"
-            "已阻止启动以保护您的安全。"
-        )
-        _show_messagebox_blocking(title, message)
-        sys.exit(1)
-
-    try:
-        expected_hash = hash_path.read_text("utf-8").strip()
-    except Exception as e:
-        title = "⚠ 完整性校验异常"
-        message = (
-            f"无法读取 .welcome.hash：{e}\n\n"
-            "⚠ 本软件为免费开源项目，从未授权任何人售卖。\n"
-            "⚠ 如在第三方平台购买了本软件，请凭此截图退款举报。\n\n"
-            "已阻止启动以保护您的安全。"
-        )
-        _show_messagebox_blocking(title, message)
-        sys.exit(1)
-
-    # 用 welcome 内容的第一行（去除 # 号）作为标题
-    first_line = welcome_text.splitlines()[0] if welcome_text.splitlines() else ""
-    title = first_line.lstrip("# \t\r") or "📢 公告"
-
-    if actual_hash == expected_hash:
-        # 完整性通过 → 弹窗显示正常公告（不阻止启动）
-        _show_messagebox_blocking(title, welcome_text)
-        return
-
-    # 哈希不匹配 → 弹窗并阻止启动
-    message = (
-        "本软件已被篡改！请从官方渠道重新下载。\n\n"
-        "━━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"{welcome_text}\n\n"
-        "━━━━━━━━━━━━━━━━━━━━━\n\n"
-        "⚠ MaaNTE 为免费开源项目，从未授权任何人售卖。\n"
-        "⚠ 如在第三方平台购买了本软件，请凭此截图退款举报。\n"
-        "⚠ 本弹窗说明程序已被篡改，已阻止启动。"
-    )
-    _show_messagebox_blocking("⚠ 完整性校验失败", message)
-    sys.exit(1)
 
 
 def read_pip_config() -> dict:
@@ -628,8 +543,6 @@ def agent(is_dev_mode=False):
 def main():
     current_version = read_interface_version()
     is_dev_mode = current_version == "DEBUG"
-
-    _verify_warning_integrity()
 
     if sys.platform.startswith("win"):
         _check_admin_privilege()
