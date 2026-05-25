@@ -585,7 +585,7 @@ def agent(is_dev_mode=False):
 
         try:
             import custom
-        except ImportError:
+        except Exception:
             logger.exception("Failed to import custom actions")
             raise
 
