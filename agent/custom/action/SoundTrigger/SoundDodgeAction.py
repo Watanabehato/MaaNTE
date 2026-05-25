@@ -8,8 +8,6 @@ from maa.custom_action import CustomAction
 from maa.context import Context
 
 from custom.action.Common.logger import get_logger
-from custom.action.SoundTrigger.DodgeCounterTrigger import Dodger
-from custom.action.SoundTrigger.SoundListener import Ear
 from utils.maafocus import PrintT
 
 logger = get_logger(__name__)
@@ -28,6 +26,9 @@ class Ctx:
     def setup(self, controller, threshold=0.13, counter_threshold=0.12):
         if self.active:
             return
+
+        from custom.action.SoundTrigger.DodgeCounterTrigger import Dodger
+        from custom.action.SoundTrigger.SoundListener import Ear
 
         base = Path(__file__).parents[4] / "assets" / "resource" / "base"
         if not base.exists():

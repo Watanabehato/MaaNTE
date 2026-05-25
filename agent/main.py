@@ -583,7 +583,11 @@ def agent(is_dev_mode=False):
         from maa.agent.agent_server import AgentServer
         from maa.tasker import Tasker
 
-        import custom
+        try:
+            import custom
+        except Exception as e:
+            logger.error("Failed to import custom actions: %s", e, exc_info=True)
+            raise
 
         Tasker.set_log_dir("./debug")
 
