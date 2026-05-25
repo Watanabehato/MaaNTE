@@ -585,8 +585,8 @@ def agent(is_dev_mode=False):
 
         try:
             import custom
-        except Exception as e:
-            logger.error("Failed to import custom actions: %s", e, exc_info=True)
+        except ImportError:
+            logger.exception("Failed to import custom actions")
             raise
 
         Tasker.set_log_dir("./debug")

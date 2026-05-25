@@ -5,11 +5,13 @@ import warnings
 from typing import Callable, Optional
 
 import ctypes
+import sys
 
 import librosa
 import numpy as np
 
-ctypes.cdll.ole32  # 预加载 ole32.dll，防止嵌入式 Python 中 soundcard 的 cffi.dlopen 失败（见 #199）
+if sys.platform == "win32":
+    ctypes.cdll.ole32  # 预加载 ole32.dll，防止嵌入式 Python 中 soundcard 的 cffi.dlopen 失败（见 #199）
 import soundcard as sc
 
 warnings.filterwarnings("ignore", message="data discontinuity in recording")
