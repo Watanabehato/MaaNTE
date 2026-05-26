@@ -342,12 +342,18 @@ def log_pi_environment() -> None:
 def find_local_wheels_dir():
     """查找本地deps目录中的whl文件"""
     project_root = Path(project_root_dir)
-    deps_dir = project_root / "deps"
 
-    if deps_dir.exists() and any(deps_dir.glob("*.whl")):
-        whl_count = len(list(deps_dir.glob("*.whl")))
-        logger.debug(f"发现本地deps目录包含 {whl_count} 个 whl 文件")
-        return deps_dir
+    # 支持多个可能的 deps 路径
+    candidates = [
+        project_root / "deps",              # 开发环境路径
+        project_root / "install" / "deps",  # CI 构建路径
+    ]
+
+    for deps_dir in candidates:
+        if deps_dir.exists() and any(deps_dir.glob("*.whl")):
+            whl_count = len(list(deps_dir.glob("*.whl")))
+            logger.debug(f"发现本地deps目录: {deps_dir}，包含 {whl_count} 个 whl 文件")
+            return deps_dir
 
     logger.debug("未找到deps目录或目录中无 whl 文件")
     return None
