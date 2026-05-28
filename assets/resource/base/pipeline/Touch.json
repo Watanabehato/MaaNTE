@@ -38,7 +38,7 @@
         "action": {
             "type": "Click",
             "param": {
-                "target": [640, 360]
+                "target": [660, 480]
             }
         },
         "rate_limit": 0,
