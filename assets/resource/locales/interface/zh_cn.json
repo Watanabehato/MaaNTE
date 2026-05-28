@@ -143,5 +143,7 @@
     "task_auto_drive_dataset_input_output_dir_label": "输出目录",
     "task_auto_drive_dataset_input_duration_label": "录制时长",
     "task_auto_drive_dataset_input_duration_desc": "录制时长，默认为 60 秒。",
-    "task_auto_drive_dataset_input_start_delay_label": "录制延迟"
+    "task_auto_drive_dataset_input_start_delay_label": "录制延迟",
+    "task_touch_label": "抚摸",
+    "task_touch_desc": "检测"抚摸"按钮并自动执行：按F → 点击屏幕中央 → 按ESC，重复100次"
 }

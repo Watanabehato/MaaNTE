@@ -143,5 +143,7 @@
     "task_auto_drive_dataset_input_output_dir_label": "Output Directory",
     "task_auto_drive_dataset_input_duration_label": "Recording Duration",
     "task_auto_drive_dataset_input_duration_desc": "Recording duration, 60 seconds by default.",
-    "task_auto_drive_dataset_input_start_delay_label": "Start Delay"
+    "task_auto_drive_dataset_input_start_delay_label": "Start Delay",
+    "task_touch_label": "Touch",
+    "task_touch_desc": "Detect \"Touch\" button and auto execute: Press F → Click screen center → Press ESC, repeat 100 times"
 }

@@ -1,0 +1,10 @@
+{
+    "task": [
+        {
+            "name": "Touch",
+            "label": "$task_touch_label",
+            "entry": "TouchDetect",
+            "description": "$task_touch_desc"
+        }
+    ]
+}
