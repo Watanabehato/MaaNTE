@@ -62,7 +62,7 @@
                 }
             ],
             "pipeline_override": {
-                "TouchClickCenter": {
+                "TouchClickInteractionArea": {
                     "post_delay": "{delay}"
                 }
             }

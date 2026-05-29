@@ -29,9 +29,9 @@
         "rate_limit": 0,
         "pre_delay": 0,
         "post_delay": 1000,
-        "next": ["TouchClickCenter"]
+        "next": ["TouchClickInteractionArea"]
     },
-    "TouchClickCenter": {
+    "TouchClickInteractionArea": {
         "recognition": {
             "type": "DirectHit"
         },
