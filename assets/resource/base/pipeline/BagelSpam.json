@@ -289,7 +289,7 @@
         "timeout": 100,
         "rate_limit": 0,
         "next": [
-            "BagelSpamPressEscToFinish"
+            "BagelSpamCloseBagelToFinish"
         ],
         "on_error": [
             "BagelSpamClickDraftArea"
@@ -480,47 +480,46 @@
             "BagelSpamClickRelease"
         ]
     },
-    "BagelSpamPressEscToFinish": {
-        "desc": "发布次数已达上限后按 Esc 退出",
-        "recognition": {
-            "type": "DirectHit"
-        },
-        "action": {
-            "type": "ClickKey",
-            "param": {
-                "key": 27
-            }
-        },
-        "post_delay": 1000,
-        "next": [
-            "BagelSpamWaitEscButtonToFinish"
-        ]
-    },
-    "BagelSpamWaitEscButtonToFinish": {
-        "desc": "等待 Esc 标识出现后结束任务",
+    "BagelSpamCloseBagelToFinish": {
+        "desc": "发布次数已达上限后关闭贝果页面",
         "recognition": {
             "type": "TemplateMatch",
             "param": {
                 "roi": [
-                    1185,
+                    1160,
                     0,
-                    95,
-                    127
+                    120,
+                    122
                 ],
-                "template": [
-                    "BagelSpam/esc_red.png",
-                    "BagelSpam/esc.png"
-                ],
-                "threshold": 0.65
+                "template": "BagelSpam/close.png"
             }
         },
-        "timeout": 500,
+        "action": {
+            "type": "Click"
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "rate_limit": 0,
+        "next": [
+            "BagelSpamFinishInWorld",
+            "[JumpBack]SceneAnyEnterWorld"
+        ]
+    },
+    "BagelSpamFinishInWorld": {
+        "desc": "确认已回到大世界后结束任务",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "InWorld"
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
         "rate_limit": 0,
         "next": [
             "BagelSpamExit"
-        ],
-        "on_error": [
-            "BagelSpamPressEscToFinish"
         ]
     },
     "BagelSpamExit": {
