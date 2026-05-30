@@ -254,7 +254,15 @@
             }
         },
         "action": {
-            "type": "Click"
+            "type": "Click",
+            "param": {
+                "target": [
+                    19,
+                    657,
+                    92,
+                    30
+                ]
+            }
         },
         "next": [
             "BagelSpamClickDraftArea"
