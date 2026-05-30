@@ -486,10 +486,10 @@
             "type": "TemplateMatch",
             "param": {
                 "roi": [
-                    1190,
-                    10,
-                    70,
-                    70
+                    1167,
+                    0,
+                    108,
+                    117
                 ],
                 "template": "BagelSpam/bagel_close.png"
             }
