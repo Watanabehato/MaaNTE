@@ -281,12 +281,13 @@
                 ],
                 "expected": [
                     "今日发布次数：5/5"
-                ],
-                "threshold": 0.8
+                ]
             }
         },
-        "timeout": 1000,
-        "rate_limit": 200,
+        "pre_delay": 0,
+        "post_delay": 0,
+        "timeout": 100,
+        "rate_limit": 0,
         "next": [
             "BagelSpamPressEscToFinish"
         ],
