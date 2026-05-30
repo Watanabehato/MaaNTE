@@ -265,6 +265,32 @@
             }
         },
         "next": [
+            "BagelSpamCheckDailyPublishCount"
+        ]
+    },
+    "BagelSpamCheckDailyPublishCount": {
+        "desc": "检查今日发布次数是否已达上限",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    701,
+                    572,
+                    193,
+                    85
+                ],
+                "expected": [
+                    "今日发布次数：5/5"
+                ],
+                "threshold": 0.8
+            }
+        },
+        "timeout": 1000,
+        "rate_limit": 200,
+        "next": [
+            "BagelSpamPressEscToFinish"
+        ],
+        "on_error": [
             "BagelSpamClickDraftArea"
         ]
     },
@@ -451,6 +477,49 @@
         "post_delay": 500,
         "next": [
             "BagelSpamClickRelease"
+        ]
+    },
+    "BagelSpamPressEscToFinish": {
+        "desc": "发布次数已达上限后按 Esc 退出",
+        "recognition": {
+            "type": "DirectHit"
+        },
+        "action": {
+            "type": "ClickKey",
+            "param": {
+                "key": 27
+            }
+        },
+        "post_delay": 1000,
+        "next": [
+            "BagelSpamWaitEscButtonToFinish"
+        ]
+    },
+    "BagelSpamWaitEscButtonToFinish": {
+        "desc": "等待 Esc 标识出现后结束任务",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    1185,
+                    0,
+                    95,
+                    127
+                ],
+                "template": [
+                    "BagelSpam/esc_red.png",
+                    "BagelSpam/esc.png"
+                ],
+                "threshold": 0.65
+            }
+        },
+        "timeout": 500,
+        "rate_limit": 0,
+        "next": [
+            "BagelSpamExit"
+        ],
+        "on_error": [
+            "BagelSpamPressEscToFinish"
         ]
     },
     "BagelSpamExit": {
