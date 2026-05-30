@@ -1,0 +1,16 @@
+{
+    "task": [
+        {
+            "name": "BagelSpam",
+            "label": "$task_bagel_spam_label",
+            "entry": "BagelSpamEntrance",
+            "description": "$task_bagel_spam_desc",
+            "controller": [
+                "Win32-Front"
+            ],
+            "group": [
+                "HethereauHobbies"
+            ]
+        }
+    ]
+}

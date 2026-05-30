@@ -1,0 +1,863 @@
+{
+    "BagelSpamEntrance": {
+        "desc": "贝果灌水任务入口",
+        "next": [
+            "BagelSpamEnsureEscButton"
+        ]
+    },
+    "BagelSpamEnsureEscButton": {
+        "desc": "确认当前可通过 Esc 退出当前界面",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    1185,
+                    0,
+                    95,
+                    127
+                ],
+                "template": [
+                    "BagelSpam/esc_red.png",
+                    "BagelSpam/esc.png"
+                ],
+                "threshold": 0.65
+            }
+        },
+        "action": {
+            "type": "ClickKey",
+            "param": {
+                "key": 27
+            }
+        },
+        "timeout": 1000,
+        "rate_limit": 0,
+        "post_delay": 500,
+        "next": [
+            "BagelSpamOpenCamera"
+        ],
+        "on_error": [
+            "BagelSpamPressEscRetry"
+        ]
+    },
+    "BagelSpamPressEscRetry": {
+        "desc": "未识别到 Esc 标识，按 Esc 后重试",
+        "recognition": {
+            "type": "DirectHit"
+        },
+        "action": {
+            "type": "ClickKey",
+            "param": {
+                "key": 27
+            }
+        },
+        "post_delay": 1000,
+        "next": [
+            "BagelSpamEnsureEscButton"
+        ]
+    },
+    "BagelSpamOpenCamera": {
+        "desc": "点击相机入口",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    910,
+                    581,
+                    95,
+                    98
+                ],
+                "template": "BagelSpam/camera.png",
+                "threshold": 0.7
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "BagelSpamTakeShot"
+        ]
+    },
+    "BagelSpamTakeShot": {
+        "desc": "点击拍照按钮",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    1074,
+                    268,
+                    139,
+                    141
+                ],
+                "template": "BagelSpam/shot.png"
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "BagelSpamSaveShot"
+        ]
+    },
+    "BagelSpamSaveShot": {
+        "desc": "保存图片",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    1159,
+                    616,
+                    115,
+                    104
+                ],
+                "template": "BagelSpam/save.png"
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "BagelSpamVerifySaved"
+        ]
+    },
+    "BagelSpamVerifySaved": {
+        "desc": "确认图片已保存",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    442,
+                    302,
+                    401,
+                    112
+                ],
+                "expected": [
+                    "已保存至本地文件夹目录",
+                    "已儲存至本機資料夾目錄",
+                    "(?i)Saved\\s*to\\s*(the\\s*)?(local\\s*)?(file\\s*)?folder",
+                    "ローカルフォルダに保存しました",
+                    "로컬 폴더에 저장되었습니다"
+                ],
+                "threshold": 0.4
+            }
+        },
+        "timeout": 2000,
+        "rate_limit": 0,
+        "next": [
+            "BagelSpamCloseCamera"
+        ],
+        "on_error": [
+            "BagelSpamSaveShot"
+        ]
+    },
+    "BagelSpamCloseCamera": {
+        "desc": "识别关闭按钮后按 Esc 退出相机",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    1160,
+                    0,
+                    120,
+                    122
+                ],
+                "template": "BagelSpam/close.png"
+            }
+        },
+        "action": {
+            "type": "ClickKey",
+            "param": {
+                "key": 27
+            }
+        },
+        "timeout": 1000,
+        "post_delay": 1000,
+        "next": [
+            "BagelSpamWaitCameraAfterClose"
+        ],
+        "on_error": [
+            "BagelSpamPressEscUntilCamera"
+        ]
+    },
+    "BagelSpamPressEscUntilCamera": {
+        "desc": "持续按 Esc 直到回到可见相机入口的界面",
+        "recognition": {
+            "type": "DirectHit"
+        },
+        "action": {
+            "type": "ClickKey",
+            "param": {
+                "key": 27
+            }
+        },
+        "post_delay": 1000,
+        "next": [
+            "BagelSpamWaitCameraAfterClose"
+        ]
+    },
+    "BagelSpamWaitCameraAfterClose": {
+        "desc": "等待相机入口重新出现",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    910,
+                    581,
+                    95,
+                    98
+                ],
+                "template": "BagelSpam/camera.png",
+                "threshold": 0.7
+            }
+        },
+        "timeout": 500,
+        "rate_limit": 0,
+        "next": [
+            "BagelSpamOpenBagel"
+        ],
+        "on_error": [
+            "BagelSpamPressEscUntilCamera"
+        ]
+    },
+    "BagelSpamOpenBagel": {
+        "desc": "打开贝果入口",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    1054,
+                    349,
+                    120,
+                    120
+                ],
+                "template": "BagelSpam/bagel.png"
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "BagelSpamClickRelease"
+        ]
+    },
+    "BagelSpamClickRelease": {
+        "desc": "点击发布入口",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    627,
+                    89,
+                    87
+                ],
+                "template": "BagelSpam/release.png"
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "BagelSpamClickDraftArea"
+        ]
+    },
+    "BagelSpamClickDraftArea": {
+        "desc": "等待后点击草稿区域",
+        "recognition": {
+            "type": "DirectHit"
+        },
+        "pre_delay": 1000,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    270,
+                    380
+                ]
+            }
+        },
+        "next": [
+            "BagelSpamClickDraftTab"
+        ]
+    },
+    "BagelSpamClickDraftTab": {
+        "desc": "点击目标标签区域",
+        "recognition": {
+            "type": "DirectHit"
+        },
+        "pre_delay": 500,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    148,
+                    142,
+                    116,
+                    77
+                ]
+            }
+        },
+        "next": [
+            "BagelSpamConfirmPublish01"
+        ]
+    },
+    "BagelSpamConfirmPublish01": {
+        "desc": "识别确认按钮，第 1 次",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    997,
+                    585,
+                    269,
+                    126
+                ],
+                "expected": [
+                    "确认",
+                    "確認",
+                    "(?i)Confirm",
+                    "確定",
+                    "确定",
+                    "OK",
+                    "확인"
+                ],
+                "threshold": 0.8
+            }
+        },
+        "pre_delay": 200,
+        "timeout": 200,
+        "rate_limit": 0,
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "BagelSpamClickTitleInput"
+        ],
+        "on_error": [
+            "BagelSpamConfirmPublish02"
+        ]
+    },
+    "BagelSpamConfirmPublish02": {
+        "desc": "识别确认按钮，第 2 次",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    997,
+                    585,
+                    269,
+                    126
+                ],
+                "expected": [
+                    "确认",
+                    "確認",
+                    "(?i)Confirm",
+                    "確定",
+                    "确定",
+                    "OK",
+                    "확인"
+                ],
+                "threshold": 0.8
+            }
+        },
+        "pre_delay": 200,
+        "timeout": 200,
+        "rate_limit": 0,
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "BagelSpamClickTitleInput"
+        ],
+        "on_error": [
+            "BagelSpamConfirmPublish03"
+        ]
+    },
+    "BagelSpamConfirmPublish03": {
+        "desc": "识别确认按钮，第 3 次",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    997,
+                    585,
+                    269,
+                    126
+                ],
+                "expected": [
+                    "确认",
+                    "確認",
+                    "(?i)Confirm",
+                    "確定",
+                    "确定",
+                    "OK",
+                    "확인"
+                ],
+                "threshold": 0.8
+            }
+        },
+        "pre_delay": 200,
+        "timeout": 200,
+        "rate_limit": 0,
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "BagelSpamClickTitleInput"
+        ],
+        "on_error": [
+            "BagelSpamConfirmPublish04"
+        ]
+    },
+    "BagelSpamConfirmPublish04": {
+        "desc": "识别确认按钮，第 4 次",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    997,
+                    585,
+                    269,
+                    126
+                ],
+                "expected": [
+                    "确认",
+                    "確認",
+                    "(?i)Confirm",
+                    "確定",
+                    "确定",
+                    "OK",
+                    "확인"
+                ],
+                "threshold": 0.8
+            }
+        },
+        "pre_delay": 200,
+        "timeout": 200,
+        "rate_limit": 0,
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "BagelSpamClickTitleInput"
+        ],
+        "on_error": [
+            "BagelSpamConfirmPublish05"
+        ]
+    },
+    "BagelSpamConfirmPublish05": {
+        "desc": "识别确认按钮，第 5 次",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    997,
+                    585,
+                    269,
+                    126
+                ],
+                "expected": [
+                    "确认",
+                    "確認",
+                    "(?i)Confirm",
+                    "確定",
+                    "确定",
+                    "OK",
+                    "확인"
+                ],
+                "threshold": 0.8
+            }
+        },
+        "pre_delay": 200,
+        "timeout": 200,
+        "rate_limit": 0,
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "BagelSpamClickTitleInput"
+        ],
+        "on_error": [
+            "BagelSpamConfirmPublish06"
+        ]
+    },
+    "BagelSpamConfirmPublish06": {
+        "desc": "识别确认按钮，第 6 次",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    997,
+                    585,
+                    269,
+                    126
+                ],
+                "expected": [
+                    "确认",
+                    "確認",
+                    "(?i)Confirm",
+                    "確定",
+                    "确定",
+                    "OK",
+                    "확인"
+                ],
+                "threshold": 0.8
+            }
+        },
+        "pre_delay": 200,
+        "timeout": 200,
+        "rate_limit": 0,
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "BagelSpamClickTitleInput"
+        ],
+        "on_error": [
+            "BagelSpamConfirmPublish07"
+        ]
+    },
+    "BagelSpamConfirmPublish07": {
+        "desc": "识别确认按钮，第 7 次",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    997,
+                    585,
+                    269,
+                    126
+                ],
+                "expected": [
+                    "确认",
+                    "確認",
+                    "(?i)Confirm",
+                    "確定",
+                    "确定",
+                    "OK",
+                    "확인"
+                ],
+                "threshold": 0.8
+            }
+        },
+        "pre_delay": 200,
+        "timeout": 200,
+        "rate_limit": 0,
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "BagelSpamClickTitleInput"
+        ],
+        "on_error": [
+            "BagelSpamConfirmPublish08"
+        ]
+    },
+    "BagelSpamConfirmPublish08": {
+        "desc": "识别确认按钮，第 8 次",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    997,
+                    585,
+                    269,
+                    126
+                ],
+                "expected": [
+                    "确认",
+                    "確認",
+                    "(?i)Confirm",
+                    "確定",
+                    "确定",
+                    "OK",
+                    "확인"
+                ],
+                "threshold": 0.8
+            }
+        },
+        "pre_delay": 200,
+        "timeout": 200,
+        "rate_limit": 0,
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "BagelSpamClickTitleInput"
+        ],
+        "on_error": [
+            "BagelSpamConfirmPublish09"
+        ]
+    },
+    "BagelSpamConfirmPublish09": {
+        "desc": "识别确认按钮，第 9 次",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    997,
+                    585,
+                    269,
+                    126
+                ],
+                "expected": [
+                    "确认",
+                    "確認",
+                    "(?i)Confirm",
+                    "確定",
+                    "确定",
+                    "OK",
+                    "확인"
+                ],
+                "threshold": 0.8
+            }
+        },
+        "pre_delay": 200,
+        "timeout": 200,
+        "rate_limit": 0,
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "BagelSpamClickTitleInput"
+        ],
+        "on_error": [
+            "BagelSpamConfirmPublish10"
+        ]
+    },
+    "BagelSpamConfirmPublish10": {
+        "desc": "识别确认按钮，第 10 次",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    997,
+                    585,
+                    269,
+                    126
+                ],
+                "expected": [
+                    "确认",
+                    "確認",
+                    "(?i)Confirm",
+                    "確定",
+                    "确定",
+                    "OK",
+                    "확인"
+                ],
+                "threshold": 0.8
+            }
+        },
+        "pre_delay": 200,
+        "timeout": 200,
+        "rate_limit": 0,
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "BagelSpamClickTitleInput"
+        ],
+        "on_error": [
+            "BagelSpamConfirmFailed"
+        ],
+        "focus": {
+            "Node.Action.Failed": {
+                "content": "未识别到确认按钮",
+                "display": [
+                    "log",
+                    "toast"
+                ]
+            }
+        }
+    },
+    "BagelSpamConfirmFailed": {
+        "desc": "确认按钮识别失败，停止任务",
+        "recognition": {
+            "type": "DirectHit"
+        },
+        "action": {
+            "type": "StopTask"
+        },
+        "focus": {
+            "Node.Action.Starting": {
+                "content": "未识别到确认按钮",
+                "display": [
+                    "log",
+                    "toast"
+                ]
+            }
+        }
+    },
+    "BagelSpamClickTitleInput": {
+        "desc": "点击标题输入区域",
+        "recognition": {
+            "type": "DirectHit"
+        },
+        "pre_delay": 500,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    950,
+                    160
+                ]
+            }
+        },
+        "next": [
+            "BagelSpamInputTitle"
+        ]
+    },
+    "BagelSpamInputTitle": {
+        "desc": "输入标题",
+        "recognition": {
+            "type": "DirectHit"
+        },
+        "action": {
+            "type": "InputText",
+            "param": {
+                "input_text": "关注塔菲喵"
+            }
+        },
+        "next": [
+            "BagelSpamClickContentInput"
+        ]
+    },
+    "BagelSpamClickContentInput": {
+        "desc": "点击正文输入区域",
+        "recognition": {
+            "type": "DirectHit"
+        },
+        "pre_delay": 200,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1080,
+                    400
+                ]
+            }
+        },
+        "next": [
+            "BagelSpamInputContent"
+        ]
+    },
+    "BagelSpamInputContent": {
+        "desc": "输入正文",
+        "recognition": {
+            "type": "DirectHit"
+        },
+        "action": {
+            "type": "InputText",
+            "param": {
+                "input_text": "关注塔菲谢谢喵"
+            }
+        },
+        "next": [
+            "BagelSpamSubmitPost"
+        ]
+    },
+    "BagelSpamSubmitPost": {
+        "desc": "点击发布按钮",
+        "recognition": {
+            "type": "DirectHit"
+        },
+        "pre_delay": 500,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1170,
+                    650
+                ]
+            }
+        },
+        "next": [
+            "BagelSpamCheckPublishLimit"
+        ]
+    },
+    "BagelSpamCheckPublishLimit": {
+        "desc": "检查今日发布次数是否达到上限",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    511,
+                    310,
+                    269,
+                    93
+                ],
+                "expected": [
+                    "发布次数已达到上限",
+                    "發布次數已達到上限",
+                    "(?i)(post|publish|publication)\\s*(count|times)?\\s*(has\\s*)?(reached\\s*)?(the\\s*)?(daily\\s*)?(limit|maximum)",
+                    "投稿回数が上限に達しました",
+                    "게시 횟수가 상한에 도달했습니다"
+                ],
+                "threshold": 0.8
+            }
+        },
+        "timeout": 500,
+        "rate_limit": 0,
+        "next": [
+            "BagelSpamPressEscToFinish"
+        ],
+        "on_error": [
+            "BagelSpamRepeatPublishDelay"
+        ]
+    },
+    "BagelSpamRepeatPublishDelay": {
+        "desc": "未达到发布上限，延迟后重复发布流程",
+        "recognition": {
+            "type": "DirectHit"
+        },
+        "post_delay": 500,
+        "next": [
+            "BagelSpamClickRelease"
+        ]
+    },
+    "BagelSpamPressEscToFinish": {
+        "desc": "达到发布上限后按 Esc 退出",
+        "recognition": {
+            "type": "DirectHit"
+        },
+        "action": {
+            "type": "ClickKey",
+            "param": {
+                "key": 27
+            }
+        },
+        "post_delay": 1000,
+        "next": [
+            "BagelSpamWaitEscButtonToFinish"
+        ]
+    },
+    "BagelSpamWaitEscButtonToFinish": {
+        "desc": "等待 Esc 标识出现后结束任务",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    1185,
+                    0,
+                    95,
+                    127
+                ],
+                "template": [
+                    "BagelSpam/esc_red.png",
+                    "BagelSpam/esc.png"
+                ],
+                "threshold": 0.65
+            }
+        },
+        "timeout": 500,
+        "rate_limit": 0,
+        "next": [
+            "BagelSpamExit"
+        ],
+        "on_error": [
+            "BagelSpamPressEscToFinish"
+        ]
+    },
+    "BagelSpamExit": {
+        "desc": "贝果灌水任务出口"
+    }
+}
